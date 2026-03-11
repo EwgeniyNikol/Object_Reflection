@@ -17,9 +17,23 @@ jobs:
       uses: actions/setup-node@v3
       with:
         node-version: '18.x'
-        
+    
+    - name: Debug - show files
+      run: |
+        echo "Current directory:"
+        pwd
+        echo "Files in root:"
+        ls -la
+        echo "Package.json content:"
+        cat package.json
+    
     - name: Install dependencies
       run: npm ci
+      continue-on-error: true
+    
+    - name: Show npm error log
+      if: failure()
+      run: cat /home/runner/.npm/_logs/*-debug.log || echo "No npm log found"
       
     - name: Run ESLint
       run: npm run lint
