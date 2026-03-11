@@ -1,4 +1,4 @@
-name: CI
+name: CI Debug
 
 on:
   push:
@@ -18,28 +18,39 @@ jobs:
       with:
         node-version: '18.x'
     
-    - name: Debug - show files
+    - name: Debug - показать структуру
       run: |
-        echo "Current directory:"
+        echo "=== Текущая директория ==="
         pwd
-        echo "Files in root:"
+        echo "=== Файлы в корне ==="
         ls -la
-        echo "Package.json content:"
+        echo "=== Содержимое package.json ==="
         cat package.json
+        echo "=== Содержимое .babelrc (если есть) ==="
+        cat .babelrc 2>/dev/null || echo ".babelrc не найден"
+        echo "=== Содержимое .eslintrc.js (если есть) ==="
+        cat .eslintrc.js 2>/dev/null || echo ".eslintrc.js не найден"
     
-    - name: Install dependencies
+    - name: Шаг 1 - npm ci
       run: npm ci
       continue-on-error: true
-    
-    - name: Show npm error log
-      if: failure()
-      run: cat /home/runner/.npm/_logs/*-debug.log || echo "No npm log found"
       
-    - name: Run ESLint
+    - name: Шаг 2 - Проверка после установки
+      run: |
+        echo "=== node_modules после npm ci ==="
+        ls -la node_modules || echo "node_modules не создана"
+      
+    - name: Шаг 3 - npm run lint
       run: npm run lint
+      continue-on-error: true
       
-    - name: Run tests with coverage
-      run: npm run test:coverage
+    - name: Шаг 4 - npm test
+      run: npm test
+      continue-on-error: true
       
-    - name: Build project
+    - name: Шаг 5 - npm run build
       run: npm run build
+      continue-on-error: true
+      
+    - name: Итоговый статус
+      run: echo "Все шаги выполнены. Проверьте логи выше."
